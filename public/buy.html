@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Buy | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">🛍️</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html" class="active">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<!-- SEARCH + CART -->
+<div class="search-cart-wrap">
+
+  <div class="search-box-new">
+    <input type="text" class="search-input-new" placeholder="Search items to buy...">
+    <button class="search-btn-new">Search</button>
+  </div>
+
+  <!-- CART BUTTON: GOES TO CART PAGE -->
+  <div class="cart-area-new" onclick="location.href='cart.html'">
+    <span class="cart-icon-new">🛒</span>
+    <div class="cart-info">
+      <span class="cart-label">Cart</span>
+      <span class="cart-count-new" id="cartCount">0</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ITEMS -->
+<div class="sample-items-3">
+  <h2 id="buyHeading">Items Available to Buy</h2>
+
+  <div class="sample-grid-3">
+
+    <div class="sample-card-3" data-category="electronics">
+      <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8" class="sample-img-3">
+      <p class="item-name">Laptop</p>
+      <p class="item-price">¥45,000</p>
+
+      <div class="qty-box">
+        <button class="qty-btn minus">−</button>
+        <span class="qty-value">1</span>
+        <button class="qty-btn plus">+</button>
+      </div>
+
+      <button class="cart-btn" data-name="Laptop" data-price="45000">Add to Cart</button>
+    </div>
+
+    <div class="sample-card-3" data-category="electronics">
+      <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e" class="sample-img-3">
+      <p class="item-name">Headphones</p>
+      <p class="item-price">¥8,500</p>
+
+      <div class="qty-box">
+        <button class="qty-btn minus">−</button>
+        <span class="qty-value">1</span>
+        <button class="qty-btn plus">+</button>
+      </div>
+
+      <button class="cart-btn" data-name="Headphones" data-price="8500">Add to Cart</button>
+    </div>
+
+    <div class="sample-card-3" data-category="fashion">
+      <img src="https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5" class="sample-img-3">
+      <p class="item-name">Shoes</p>
+      <p class="item-price">¥3,200</p>
+
+      <div class="qty-box">
+        <button class="qty-btn minus">−</button>
+        <span class="qty-value">1</span>
+        <button class="qty-btn plus">+</button>
+      </div>
+
+      <button class="cart-btn" data-name="Shoes" data-price="3200">Add to Cart</button>
+    </div>
+
+    <div class="sample-card-3" data-category="electronics">
+      <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" class="sample-img-3">
+      <p class="item-name">Camera</p>
+      <p class="item-price">¥22,000</p>
+
+      <div class="qty-box">
+        <button class="qty-btn minus">−</button>
+        <span class="qty-value">1</span>
+        <button class="qty-btn plus">+</button>
+      </div>
+
+      <button class="cart-btn" data-name="Camera" data-price="22000">Add to Cart</button>
+    </div>
+
+  </div>
+  <p id="categoryEmpty" hidden>No sample items are available in this category yet.</p>
+</div>
+
+<script>
+  let cartCount = 0;
+  const cartCountSpan = document.getElementById('cartCount');
+  const category = new URLSearchParams(window.location.search).get('cat') || 'all';
+  const categoryNames = {
+    all: 'All Items',
+    electronics: 'Electronics',
+    fashion: 'Fashion',
+    home: 'Home Items',
+    books: 'Books'
+  };
+  const cards = [...document.querySelectorAll('.sample-card-3')];
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const visible = category === 'all' || card.dataset.category === category;
+    card.hidden = !visible;
+    if (visible) visibleCount++;
+  });
+
+  if (categoryNames[category]) {
+    document.getElementById('buyHeading').textContent = `${categoryNames[category]} for Sale`;
+  }
+  document.getElementById('categoryEmpty').hidden = visibleCount > 0;
+
+  cards.forEach(card => {
+    const minusBtn = card.querySelector('.minus');
+    const plusBtn = card.querySelector('.plus');
+    const qtyValue = card.querySelector('.qty-value');
+    const cartBtn = card.querySelector('.cart-btn');
+
+    let qty = 1;
+
+    minusBtn.addEventListener('click', () => {
+      if (qty > 1) {
+        qty--;
+        qtyValue.textContent = qty;
+      }
+    });
+
+    plusBtn.addEventListener('click', () => {
+      qty++;
+      qtyValue.textContent = qty;
+    });
+
+    cartBtn.addEventListener('click', () => {
+      cartCount += qty;
+      cartCountSpan.textContent = cartCount;
+
+      const name = cartBtn.getAttribute('data-name');
+      const price = parseInt(cartBtn.getAttribute('data-price'));
+
+      let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+      cart.push({ name, price, qty });
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      cartBtn.textContent = `Added (${qty})`;
+      setTimeout(() => {
+        cartBtn.textContent = 'Add to Cart';
+      }, 900);
+    });
+  });
+</script>
+<!-- NEW ATTRACTIVE FOOTER -->
+<footer class="footer-new">
+  <div class="footer-content">
+    <h3 class="footer-logo">SimpleMart</h3>
+    <p>Your everyday marketplace — simple, fast, and friendly.</p>
+
+    <div class="footer-links">
+      <a href="home.html">Home</a>
+      <a href="buy.html">Buy</a>
+      <a href="sell.html">Sell</a>
+      <a href="profile.html">Profile</a>
+    </div>
+
+    <p class="footer-copy">© 2026 SimpleMart. All rights reserved.</p>
+  </div>
+</footer>
+
+
+</body>
+</html>

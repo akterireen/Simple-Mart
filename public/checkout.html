@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Checkout | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">🛍️</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="checkout-page">
+  <h2>Checkout</h2>
+
+  <div class="checkout-items" id="checkoutItems"></div>
+
+  <div class="checkout-summary">
+    <h3>Price Summary</h3>
+    <p>Subtotal: ¥<span id="subtotal">0</span></p>
+    <p>Delivery Charge: ¥<span id="delivery">500</span></p>
+    <p><strong>Total: ¥<span id="total">0</span></strong></p>
+  </div>
+
+  <div class="address-box">
+    <h3>Delivery Address</h3>
+    <textarea id="address" placeholder="Enter your delivery address..."></textarea>
+  </div>
+
+  <div class="payment-box">
+    <h3>Payment Method</h3>
+    <select id="paymentMethod">
+      <option value="cod">Cash on Delivery</option>
+      <option value="card">Credit/Debit Card</option>
+      <option value="bank">Bank Transfer</option>
+    </select>
+  </div>
+
+  <button class="checkout-btn" id="placeOrderBtn">Place Order</button>
+</div>
+
+<script>
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const checkoutItemsDiv = document.getElementById('checkoutItems');
+
+  let subtotal = 0;
+
+  if (cart.length === 0) {
+    checkoutItemsDiv.innerHTML = "<p>Your cart is empty.</p>";
+  } else {
+    cart.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.classList.add('checkout-item');
+
+      itemDiv.innerHTML = `
+        <p><strong>${item.name}</strong></p>
+        <p>Price: ¥${item.price}</p>
+        <p>Quantity: ${item.qty}</p>
+        <hr>
+      `;
+
+      checkoutItemsDiv.appendChild(itemDiv);
+
+      subtotal += item.price * item.qty;
+    });
+  }
+
+  document.getElementById('subtotal').textContent = subtotal;
+  document.getElementById('total').textContent = subtotal + 500;
+
+  document.getElementById('placeOrderBtn').addEventListener('click', () => {
+    const address = document.getElementById('address').value;
+    const payment = document.getElementById('paymentMethod').value;
+
+    if (address.trim() === "") {
+      alert("Please enter your delivery address.");
+      return;
+    }
+
+    alert("Order placed!\n\nAddress:\n" + address + "\nPayment: " + payment);
+
+    localStorage.removeItem('cart');
+    window.location.href = "home.html";
+  });
+</script>
+
+</body>
+</html>
+

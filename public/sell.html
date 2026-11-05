@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sell | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">🛍️</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html" class="active">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="sell-page">
+  <h2>Sell Your Product (Pro Version)</h2>
+
+  <div class="sell-form">
+
+    <input type="text" id="sellName" placeholder="Product Name">
+    <input type="number" id="sellPrice" placeholder="Price (¥)">
+    <input type="text" id="sellBrand" placeholder="Brand (Sony, Nike, etc)">
+    <input type="text" id="sellCategory" placeholder="Category (Electronics, Fashion, etc)">
+    <input type="number" id="sellStock" placeholder="Stock Quantity">
+    <input type="text" id="sellLocation" placeholder="Location (Tokyo, Osaka, etc)">
+    
+    <select id="sellCondition">
+      <option value="">Select Condition</option>
+      <option value="New">New</option>
+      <option value="Used">Used</option>
+    </select>
+
+    <textarea id="sellDesc" placeholder="Product Description"></textarea>
+    <input type="text" id="sellTags" placeholder="Tags (comma separated)">
+    <input type="text" id="sellImage" placeholder="Image URL">
+
+    <img id="previewImg" src="" style="display:none; width:150px; border-radius:10px; margin-top:10px;">
+
+    <button class="checkout-btn" id="sellBtn">Add Product</button>
+  </div>
+
+  <h2>Your Listings</h2>
+  <div id="sellItems" class="sample-grid-3"></div>
+</div>
+
+<!-- PRODUCT DETAILS POPUP -->
+<div id="productPopup" class="popup" style="display:none;">
+  <div class="popup-content">
+    <span class="close-popup" onclick="closePopup()">×</span>
+    <div id="popupDetails"></div>
+  </div>
+</div>
+
+<script>
+  let sellItems = JSON.parse(localStorage.getItem('sellItems')) || [];
+  const sellItemsDiv = document.getElementById('sellItems');
+
+  // Preview image
+  document.getElementById('sellImage').addEventListener('input', () => {
+    const url = document.getElementById('sellImage').value;
+    const preview = document.getElementById('previewImg');
+    if (url.trim() !== "") {
+      preview.src = url;
+      preview.style.display = "block";
+    } else {
+      preview.style.display = "none";
+    }
+  });
+
+  // Display items
+  function displayItems() {
+    sellItemsDiv.innerHTML = "";
+
+    sellItems.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.classList.add('sample-card-3');
+
+      div.innerHTML = `
+        <img src="${item.image || 'https://via.placeholder.com/200'}" class="sample-img-3">
+        <p class="item-name">${item.name}</p>
+        <p class="item-price">¥${item.price}</p>
+        <p><strong>${item.brand}</strong></p>
+        <p>${item.category}</p>
+        <p>Status: <strong>${item.status}</strong></p>
+
+        <button class="cart-btn" onclick="viewDetails(${index})">View</button>
+        <button class="cart-btn" onclick="approveItem(${index})">Approve</button>
+        <button class="cart-btn" onclick="editItem(${index})">Edit</button>
+        <button class="cart-btn" onclick="deleteItem(${index})">Delete</button>
+      `;
+
+      sellItemsDiv.appendChild(div);
+    });
+  }
+
+  displayItems();
+
+  // Add product
+  document.getElementById('sellBtn').addEventListener('click', () => {
+    const name = document.getElementById('sellName').value;
+    const price = document.getElementById('sellPrice').value;
+    const brand = document.getElementById('sellBrand').value;
+    const category = document.getElementById('sellCategory').value;
+    const stock = document.getElementById('sellStock').value;
+    const location = document.getElementById('sellLocation').value;
+    const condition = document.getElementById('sellCondition').value;
+    const desc = document.getElementById('sellDesc').value;
+    const tags = document.getElementById('sellTags').value;
+    const image = document.getElementById('sellImage').value;
+
+    if (!name || !price || !brand || !category || !stock || !location || !condition || !desc) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    sellItems.push({
+      name,
+      price,
+      brand,
+      category,
+      stock,
+      location,
+      condition,
+      desc,
+      tags,
+      image,
+      status: "Pending"
+    });
+
+    localStorage.setItem('sellItems', JSON.stringify(sellItems));
+
+    alert("Product added successfully!");
+    displayItems();
+
+    document.querySelectorAll('.sell-form input, .sell-form textarea, .sell-form select')
+      .forEach(el => el.value = "");
+    document.getElementById('previewImg').style.display = "none";
+  });
+
+  // Approve product
+  function approveItem(index) {
+    sellItems[index].status = "Approved";
+    localStorage.setItem('sellItems', JSON.stringify(sellItems));
+    displayItems();
+  }
+
+  // Edit product
+  function editItem(index) {
+    const item = sellItems[index];
+
+    document.getElementById('sellName').value = item.name;
+    document.getElementById('sellPrice').value = item.price;
+    document.getElementById('sellBrand').value = item.brand;
+    document.getElementById('sellCategory').value = item.category;
+    document.getElementById('sellStock').value = item.stock;
+    document.getElementById('sellLocation').value = item.location;
+    document.getElementById('sellCondition').value = item.condition;
+    document.getElementById('sellDesc').value = item.desc;
+    document.getElementById('sellTags').value = item.tags;
+    document.getElementById('sellImage').value = item.image;
+
+    document.getElementById('previewImg').src = item.image;
+    document.getElementById('previewImg').style.display = "block";
+
+    sellItems.splice(index, 1);
+    localStorage.setItem('sellItems', JSON.stringify(sellItems));
+    displayItems();
+  }
+
+  // Delete product
+  function deleteItem(index) {
+    sellItems.splice(index, 1);
+    localStorage.setItem('sellItems', JSON.stringify(sellItems));
+    displayItems();
+  }
+
+  // View product details popup
+  function viewDetails(index) {
+    const item = sellItems[index];
+    const popup = document.getElementById('productPopup');
+    const details = document.getElementById('popupDetails');
+
+    details.innerHTML = `
+      <h3>${item.name}</h3>
+      <img src="${item.image}" style="width:200px; border-radius:10px;">
+      <p><strong>Price:</strong> ¥${item.price}</p>
+      <p><strong>Brand:</strong> ${item.brand}</p>
+      <p><strong>Category:</strong> ${item.category}</p>
+      <p><strong>Stock:</strong> ${item.stock}</p>
+      <p><strong>Location:</strong> ${item.location}</p>
+      <p><strong>Condition:</strong> ${item.condition}</p>
+      <p><strong>Description:</strong> ${item.desc}</p>
+      <p><strong>Tags:</strong> ${item.tags}</p>
+      <p><strong>Status:</strong> ${item.status}</p>
+    `;
+
+    popup.style.display = "block";
+  }
+
+  function closePopup() {
+    document.getElementById('productPopup').style.display = "none";
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Return | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="header">
+  <div class="logo">SimpleMart</div>
+  <nav class="menu">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="container">
+  <h2>Return Borrowed Items</h2>
+  <div class="grid" id="items"></div>
+</div>
+
+<script>
+fetch("../api/borrow_history.php?user_id=1")
+  .then(res => res.json())
+  .then(items => {
+    const container = document.getElementById("items");
+    container.replaceChildren();
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "item";
+
+      const title = document.createElement("h3");
+      title.textContent = item.item_name;
+
+      const button = document.createElement("button");
+      button.textContent = "Return";
+      button.addEventListener("click", () => returnItem(item.item_id));
+
+      card.append(title, button);
+      container.append(card);
+    });
+  })
+  .catch(() => {
+    document.getElementById("items").textContent = "Borrow history could not be loaded.";
+  });
+
+function returnItem(id) {
+  const fd = new FormData();
+  fd.append("user_id", 1);
+  fd.append("item_id", id);
+
+  fetch("../api/return.php", {
+    method: "POST",
+    body: fd
+  })
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    alert(data.message || (ok ? "Return successful." : "The item could not be returned."));
+    if (ok) location.reload();
+  })
+  .catch(() => alert("Could not connect to the server. Please try again."));
+}
+</script>
+</body>
+</html>

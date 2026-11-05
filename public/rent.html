@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rent | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">🏠</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html" class="active">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="sell-page">
+  <h2>Rent Item</h2>
+
+  <div class="sell-form">
+    <input id="name" placeholder="Item Name">
+    <input id="price" type="number" placeholder="Rent Price (¥)">
+    <input id="days" type="number" placeholder="Rent Days">
+    <input id="location" placeholder="Location">
+
+    <select id="condition">
+      <option value="">Condition</option>
+      <option value="New">New</option>
+      <option value="Used - Good">Used - Good</option>
+      <option value="Used - Fair">Used - Fair</option>
+    </select>
+
+    <textarea id="description" placeholder="Description"></textarea>
+
+    <input id="image1" placeholder="Image URL 1">
+    <input id="image2" placeholder="Image URL 2">
+    <input id="image3" placeholder="Image URL 3">
+
+    <input id="tags" placeholder="Tags (comma separated)">
+    <input id="editId" type="hidden">
+
+    <button class="checkout-btn" onclick="saveRent()">Save Item</button>
+  </div>
+
+  <h2>Rent Listings</h2>
+
+  <div class="filters">
+    <input id="searchRent" placeholder="Search items..." oninput="loadRentItems()">
+
+    <select id="filterRentCategory" onchange="loadRentItems()">
+      <option value="">All Categories</option>
+    </select>
+
+    <select id="filterRentStatus" onchange="loadRentItems()">
+      <option value="">All Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Approved">Approved</option>
+      <option value="Returned">Returned</option>
+    </select>
+
+    <select id="sortRentPrice" onchange="loadRentItems()">
+      <option value="">Sort by Price</option>
+      <option value="low">Low → High</option>
+      <option value="high">High → Low</option>
+    </select>
+  </div>
+
+  <div id="listings" class="sample-grid-3"></div>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="popup" style="display:none;">
+  <div class="popup-content">
+    <span class="close-popup" onclick="closePopup()">×</span>
+    <div id="popupDetails"></div>
+  </div>
+</div>
+
+<script>
+let rentItems = JSON.parse(localStorage.getItem("rentItems")) || [];
+
+function saveRent() {
+  const id = document.getElementById("editId").value;
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const days = document.getElementById("days").value;
+  const location = document.getElementById("location").value;
+  const condition = document.getElementById("condition").value;
+  const description = document.getElementById("description").value;
+  const image1 = document.getElementById("image1").value;
+  const image2 = document.getElementById("image2").value;
+  const image3 = document.getElementById("image3").value;
+  const tags = document.getElementById("tags").value.split(",").map(t => t.trim()).filter(t => t);
+
+  if (!name || !price || !days || !location || !condition || !description) {
+    alert("Please fill all fields.");
+    return;
+  }
+
+  const itemData = {
+    name,
+    price: Number(price),
+    days: Number(days),
+    location,
+    condition,
+    description,
+    images: [image1, image2, image3].filter(i => i),
+    tags,
+    status: id ? rentItems[id].status : "Pending"
+  };
+
+  if (id) {
+    rentItems[id] = itemData;
+  } else {
+    rentItems.push(itemData);
+  }
+
+  localStorage.setItem("rentItems", JSON.stringify(rentItems));
+  clearForm();
+  loadRentItems();
+}
+
+function clearForm() {
+  document.querySelectorAll(".sell-form input, .sell-form textarea, .sell-form select")
+    .forEach(el => el.value = "");
+  document.getElementById("editId").value = "";
+}
+
+function loadRentItems() {
+  const listings = document.getElementById("listings");
+  listings.innerHTML = "";
+
+  const search = document.getElementById("searchRent")?.value.toLowerCase() || "";
+  const filterCategory = document.getElementById("filterRentCategory")?.value || "";
+  const filterStatus = document.getElementById("filterRentStatus")?.value || "";
+  const sortPrice = document.getElementById("sortRentPrice")?.value || "";
+
+  let filtered = rentItems.filter(p =>
+    p.name.toLowerCase().includes(search) ||
+    p.location.toLowerCase().includes(search)
+  );
+
+  if (filterCategory) filtered = filtered.filter(p => p.category === filterCategory);
+  if (filterStatus) filtered = filtered.filter(p => p.status === filterStatus);
+
+  if (sortPrice === "low") filtered.sort((a, b) => a.price - b.price);
+  if (sortPrice === "high") filtered.sort((a, b) => b.price - a.price);
+
+  const catSelect = document.getElementById("filterRentCategory");
+  catSelect.innerHTML = `<option value="">All Categories</option>`;
+  [...new Set(rentItems.map(p => p.category))].forEach(cat => {
+    if (cat) catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+  });
+
+  filtered.forEach((p, index) => {
+    listings.innerHTML += `
+      <div class="sample-card-3">
+        <img src="${p.images[0] || 'https://via.placeholder.com/200'}" class="sample-img-3">
+        <p class="item-name">${p.name}</p>
+        <p>Rent Price: ¥${p.price}</p>
+        <p>Rent Days: ${p.days}</p>
+        <p>${p.location} | ${p.condition}</p>
+        <p>Status: <strong>${p.status}</strong></p>
+
+        <button class="cart-btn" onclick="viewRent(${index})">View</button>
+        <button class="cart-btn" onclick="editRent(${index})">Edit</button>
+        <button class="cart-btn" onclick="approveRent(${index})">Approve</button>
+        <button class="cart-btn" onclick="returnRent(${index})">Return</button>
+        <button class="cart-btn" onclick="deleteRent(${index})">Delete</button>
+      </div>
+    `;
+  });
+}
+
+function viewRent(index) {
+  const p = rentItems[index];
+  const popup = document.getElementById("popup");
+  const details = document.getElementById("popupDetails");
+
+  let imgHTML = "";
+  p.images.forEach(img => {
+    imgHTML += `<img src="${img}" style="width:120px; margin:5px; border-radius:10px;">`;
+  });
+
+  details.innerHTML = `
+    <h3>${p.name}</h3>
+    <div>${imgHTML}</div>
+    <p><strong>Rent Price:</strong> ¥${p.price}</p>
+    <p><strong>Rent Days:</strong> ${p.days}</p>
+    <p><strong>Location:</strong> ${p.location}</p>
+    <p><strong>Condition:</strong> ${p.condition}</p>
+    <p><strong>Description:</strong> ${p.description}</p>
+    <p><strong>Tags:</strong> ${p.tags.join(", ")}</p>
+    <p><strong>Status:</strong> ${p.status}</p>
+  `;
+
+  popup.style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+function editRent(index) {
+  const p = rentItems[index];
+  document.getElementById("name").value = p.name;
+  document.getElementById("price").value = p.price;
+  document.getElementById("days").value = p.days;
+  document.getElementById("location").value = p.location;
+  document.getElementById("condition").value = p.condition;
+  document.getElementById("description").value = p.description;
+  document.getElementById("image1").value = p.images[0] || "";
+  document.getElementById("image2").value = p.images[1] || "";
+  document.getElementById("image3").value = p.images[2] || "";
+  document.getElementById("tags").value = p.tags.join(",");
+  document.getElementById("editId").value = index;
+}
+
+function approveRent(index) {
+  rentItems[index].status = "Approved";
+  localStorage.setItem("rentItems", JSON.stringify(rentItems));
+  loadRentItems();
+}
+
+function returnRent(index) {
+  rentItems[index].status = "Returned";
+  localStorage.setItem("rentItems", JSON.stringify(rentItems));
+  loadRentItems();
+}
+
+function deleteRent(index) {
+  if (!confirm("Delete this item?")) return;
+  rentItems.splice(index, 1);
+  localStorage.setItem("rentItems", JSON.stringify(rentItems));
+  loadRentItems();
+}
+
+loadRentItems();
+</script>
+
+</body>
+</html>

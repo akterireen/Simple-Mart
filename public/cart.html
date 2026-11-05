@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cart | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">🛍️</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="cart-page">
+  <h2>Your Cart</h2>
+
+  <div id="cartItems"></div>
+
+  <div class="cart-summary">
+    <h3>Summary</h3>
+    <p>Subtotal: ¥<span id="subtotal">0</span></p>
+    <p>Delivery Charge: ¥<span id="delivery">500</span></p>
+    <p><strong>Total: ¥<span id="total">0</span></strong></p>
+  </div>
+
+  <!-- BUTTON TO GO CHECKOUT -->
+  <button class="checkout-btn" onclick="location.href='checkout.html'">
+    Go to Checkout
+  </button>
+</div>
+
+<script>
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const cartItemsDiv = document.getElementById('cartItems');
+
+  let subtotal = 0;
+
+  if (cart.length === 0) {
+    cartItemsDiv.innerHTML = "<p>Your cart is empty.</p>";
+  } else {
+    cart.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.classList.add('cart-item');
+
+      itemDiv.innerHTML = `
+        <p><strong>${item.name}</strong></p>
+        <p>Price: ¥${item.price}</p>
+        <p>Quantity: ${item.qty}</p>
+        <hr>
+      `;
+
+      cartItemsDiv.appendChild(itemDiv);
+
+      subtotal += item.price * item.qty;
+    });
+  }
+
+  document.getElementById('subtotal').textContent = subtotal;
+  document.getElementById('total').textContent = subtotal + 500;
+</script>
+
+</body>
+</html>
+

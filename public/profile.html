@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">👤</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html" class="active">Profile</a>
+  </nav>
+</header>
+
+<div class="sell-page">
+  <h2>Your Profile</h2>
+
+  <div class="sell-form">
+    <input id="pName" placeholder="Full Name">
+    <input id="pAge" type="number" placeholder="Age">
+    <input id="pGender" placeholder="Gender">
+    <input id="pPhone" placeholder="Phone Number">
+    <input id="pEmail" placeholder="Email Address">
+    <input id="pAddress" placeholder="Address">
+    <input id="pPhoto" placeholder="Profile Photo URL">
+    <textarea id="pBio" placeholder="Short Bio"></textarea>
+
+    <button class="checkout-btn" onclick="saveProfile()">Update Profile</button>
+  </div>
+
+  <h2>Profile Details</h2>
+  <div id="profileCard" class="sample-grid-3"></div>
+</div>
+
+<script>
+function saveProfile() {
+  const profile = {
+    name: document.getElementById("pName").value,
+    age: document.getElementById("pAge").value,
+    gender: document.getElementById("pGender").value,
+    phone: document.getElementById("pPhone").value,
+    email: document.getElementById("pEmail").value,
+    address: document.getElementById("pAddress").value,
+    photo: document.getElementById("pPhoto").value,
+    bio: document.getElementById("pBio").value
+  };
+
+  if (!profile.name || !profile.age || !profile.phone || !profile.email) {
+    alert("Please fill Name, Age, Phone, and Email.");
+    return;
+  }
+
+  localStorage.setItem("userProfile", JSON.stringify(profile));
+  loadProfile();
+}
+
+function loadProfile() {
+  const card = document.getElementById("profileCard");
+  const p = JSON.parse(localStorage.getItem("userProfile"));
+
+  if (!p) {
+    card.innerHTML = "<p>No profile saved yet.</p>";
+    return;
+  }
+
+  card.innerHTML = `
+    <div class="sample-card-3">
+      <img src="${p.photo || 'https://via.placeholder.com/200'}" class="sample-img-3">
+      <p class="item-name">${p.name}</p>
+      <p><strong>Age:</strong> ${p.age}</p>
+      <p><strong>Gender:</strong> ${p.gender}</p>
+      <p><strong>Phone:</strong> ${p.phone}</p>
+      <p><strong>Email:</strong> ${p.email}</p>
+      <p><strong>Address:</strong> ${p.address}</p>
+      <p><strong>Bio:</strong> ${p.bio}</p>
+    </div>
+  `;
+
+  // Auto-fill form with saved data
+  document.getElementById("pName").value = p.name;
+  document.getElementById("pAge").value = p.age;
+  document.getElementById("pGender").value = p.gender;
+  document.getElementById("pPhone").value = p.phone;
+  document.getElementById("pEmail").value = p.email;
+  document.getElementById("pAddress").value = p.address;
+  document.getElementById("pPhoto").value = p.photo;
+  document.getElementById("pBio").value = p.bio;
+}
+
+loadProfile();
+</script>
+
+</body>
+</html>

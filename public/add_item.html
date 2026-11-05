@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Item | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="header">
+  <div class="logo">SimpleMart</div>
+  <nav class="menu">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="container">
+  <h2>Add Item</h2>
+  <form id="addForm">
+    <input type="hidden" name="user_id" value="1">
+    <label>Item Name</label>
+    <input type="text" name="item_name" required>
+    <label>Category</label>
+    <input type="text" name="category" required>
+    <label>Price</label>
+    <input type="number" name="price">
+    <label>Rent Price</label>
+    <input type="number" name="rent_price">
+    <label>Location</label>
+    <input type="text" name="location">
+    <label>Description</label>
+    <textarea name="description"></textarea>
+    <label>Image URL</label>
+    <input type="text" name="image">
+    <button type="submit">Save Item</button>
+  </form>
+</div>
+
+<script>
+document.getElementById("addForm").onsubmit = e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  fetch("../api/add_item.php", {
+    method: "POST",
+    body: fd
+  })
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    alert(data.message || (ok ? "Item added successfully." : "The item could not be saved."));
+    if (ok) e.target.reset();
+  })
+  .catch(() => alert("Could not connect to the server. Please try again."));
+};
+</script>
+</body>
+</html>

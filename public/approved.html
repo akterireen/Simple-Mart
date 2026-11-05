@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Approved | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">✔️</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html" class="active">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="sell-page">
+  <h2>Approved Items</h2>
+
+  <div id="approvedList" class="sample-grid-3"></div>
+</div>
+
+<script>
+function loadApproved() {
+  const approvedList = document.getElementById("approvedList");
+  approvedList.innerHTML = "";
+
+  const sellItems = JSON.parse(localStorage.getItem("products")) || [];
+  const borrowItems = JSON.parse(localStorage.getItem("borrowItems")) || [];
+  const rentItems = JSON.parse(localStorage.getItem("rentItems")) || [];
+
+  const approvedSell = sellItems.filter(i => i.status === "Approved");
+  const approvedBorrow = borrowItems.filter(i => i.status === "Approved");
+  const approvedRent = rentItems.filter(i => i.status === "Approved");
+
+  const allApproved = [
+    ...approvedSell.map(i => ({...i, type: "Sell"})),
+    ...approvedBorrow.map(i => ({...i, type: "Borrow"})),
+    ...approvedRent.map(i => ({...i, type: "Rent"}))
+  ];
+
+  if (allApproved.length === 0) {
+    approvedList.innerHTML = "<p>No approved items yet.</p>";
+    return;
+  }
+
+  allApproved.forEach(item => {
+    approvedList.innerHTML += `
+      <div class="sample-card-3">
+        <img src="${item.images?.[0] || 'https://via.placeholder.com/200'}" class="sample-img-3">
+        <p class="item-name">${item.name}</p>
+
+        ${item.type === "Sell" ? `<p>Price: ¥${item.price}</p>` : ""}
+        ${item.type === "Borrow" ? `<p>Borrow Days: ${item.days}</p>` : ""}
+        ${item.type === "Rent" ? `<p>Rent Price: ¥${item.price}</p>` : ""}
+
+        <p>Type: ${item.type}</p>
+        <p>Status: <strong>Approved</strong></p>
+      </div>
+    `;
+  });
+}
+
+loadApproved();
+</script>
+
+</body>
+</html>

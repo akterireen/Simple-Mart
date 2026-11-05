@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Borrow | SimpleMart</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .chat-box { border:1px solid #ccc; padding:10px; margin-top:10px; border-radius:10px; max-height:200px; overflow-y:auto; background:#fafafa; }
+    .chat-input { width:100%; padding:8px; margin-top:5px; border-radius:8px; }
+    .qr-box { margin-top:10px; }
+  </style>
+</head>
+<body>
+
+<header class="header-new">
+  <div class="logo-new">
+    <span class="logo-icon">🔄</span>
+    <span class="logo-text">SimpleMart</span>
+  </div>
+
+  <nav class="menu-new">
+    <a href="home.html">Home</a>
+    <a href="buy.html">Buy</a>
+    <a href="sell.html">Sell</a>
+    <a href="borrow.html" class="active">Borrow</a>
+    <a href="rent.html">Rent</a>
+    <a href="approved.html">Approved</a>
+    <a href="profile.html">Profile</a>
+  </nav>
+</header>
+
+<div class="sell-page">
+  <h2>Borrow Item</h2>
+
+  <div class="sell-form">
+    <input id="name" placeholder="Item Name">
+    <input id="days" type="number" placeholder="Borrow Days">
+    <input id="dueDate" type="date" placeholder="Due Date">
+    <input id="location" placeholder="Location">
+
+    <select id="condition">
+      <option value="">Condition</option>
+      <option value="New">New</option>
+      <option value="Used - Good">Used - Good</option>
+      <option value="Used - Fair">Used - Fair</option>
+    </select>
+
+    <textarea id="description" placeholder="Description"></textarea>
+
+    <input id="image1" placeholder="Image URL 1">
+    <input id="image2" placeholder="Image URL 2">
+    <input id="image3" placeholder="Image URL 3">
+
+    <input id="tags" placeholder="Tags (comma separated)">
+    <input id="editId" type="hidden">
+
+    <button class="checkout-btn" onclick="saveBorrow()">Save Item</button>
+  </div>
+
+  <h2>Borrow Listings</h2>
+
+  <div class="filters">
+    <input id="searchBorrow" placeholder="Search items..." oninput="loadBorrowItems()">
+
+    <select id="filterBorrowCategory" onchange="loadBorrowItems()">
+      <option value="">All Categories</option>
+    </select>
+
+    <select id="filterBorrowStatus" onchange="loadBorrowItems()">
+      <option value="">All Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Approved">Approved</option>
+      <option value="Returned">Returned</option>
+      <option value="Overdue">Overdue</option>
+    </select>
+
+    <select id="sortBorrowDays" onchange="loadBorrowItems()">
+      <option value="">Sort by Days</option>
+      <option value="low">Low → High</option>
+      <option value="high">High → Low</option>
+    </select>
+  </div>
+
+  <div id="listings" class="sample-grid-3"></div>
+</div>
+
+<!-- POPUP -->
+<div id="popup" class="popup" style="display:none;">
+  <div class="popup-content">
+    <span class="close-popup" onclick="closePopup()">×</span>
+    <div id="popupDetails"></div>
+  </div>
+</div>
+
+<script>
+let borrowItems = JSON.parse(localStorage.getItem("borrowItems")) || [];
+
+function saveBorrow() {
+  const id = document.getElementById("editId").value;
+  const name = document.getElementById("name").value;
+  const days = document.getElementById("days").value;
+  const dueDate = document.getElementById("dueDate").value;
+  const location = document.getElementById("location").value;
+  const condition = document.getElementById("condition").value;
+  const description = document.getElementById("description").value;
+  const image1 = document.getElementById("image1").value;
+  const image2 = document.getElementById("image2").value;
+  const image3 = document.getElementById("image3").value;
+  const tags = document.getElementById("tags").value.split(",").map(t => t.trim()).filter(t => t);
+
+  if (!name || !days || !dueDate || !location || !condition || !description) {
+    alert("Please fill all fields.");
+    return;
+  }
+
+  const itemData = {
+    name,
+    days: Number(days),
+    dueDate,
+    location,
+    condition,
+    description,
+    images: [image1, image2, image3].filter(i => i),
+    tags,
+    status: id ? borrowItems[id].status : "Pending",
+    reviews: id ? borrowItems[id].reviews : [],
+    chat: id ? borrowItems[id].chat : [],
+    history: id ? borrowItems[id].history : []
+  };
+
+  if (id) {
+    borrowItems[id] = itemData;
+  } else {
+    borrowItems.push(itemData);
+  }
+
+  localStorage.setItem("borrowItems", JSON.stringify(borrowItems));
+  clearForm();
+  loadBorrowItems();
+}
+
+function clearForm() {
+  document.querySelectorAll(".sell-form input, .sell-form textarea, .sell-form select")
+    .forEach(el => el.value = "");
+  document.getElementById("editId").value = "";
+}
+
+function isOverdue(date) {
+  const today = new Date();
+  const due = new Date(date);
+  return today > due;
+}
+
+function loadBorrowItems() {
+  const listings = document.getElementById("listings");
+  listings.innerHTML = "";
+
+  const search = document.getElementById("searchBorrow")?.value.toLowerCase() || "";
+  const filterCategory = document.getElementById("filterBorrowCategory")?.value || "";
+  const filterStatus = document.getElementById("filterBorrowStatus")?.value || "";
+  const sortDays = document.getElementById("sortBorrowDays")?.value || "";
+
+  let filtered = borrowItems.filter(p =>
+    p.name.toLowerCase().includes(search) ||
+    p.location.toLowerCase().includes(search)
+  );
+
+  if (filterCategory) filtered = filtered.filter(p => p.category === filterCategory);
+
+  if (filterStatus === "Overdue") {
+    filtered = filtered.filter(p => isOverdue(p.dueDate));
+  } else if (filterStatus) {
+    filtered = filtered.filter(p => p.status === filterStatus);
+  }
+
+  if (sortDays === "low") filtered.sort((a, b) => a.days - b.days);
+  if (sortDays === "high") filtered.sort((a, b) => b.days - a.days);
+
+  const catSelect = document.getElementById("filterBorrowCategory");
+  catSelect.innerHTML = `<option value="">All Categories</option>`;
+  [...new Set(borrowItems.map(p => p.category))].forEach(cat => {
+    if (cat) catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+  });
+
+  filtered.forEach((p, index) => {
+    listings.innerHTML += `
+      <div class="sample-card-3" style="border:${isOverdue(p.dueDate) ? '2px solid red' : '1px solid #ccc'};">
+        <img src="${p.images[0] || 'https://via.placeholder.com/200'}" class="sample-img-3">
+        <p class="item-name">${p.name}</p>
+        <p>Borrow Days: ${p.days}</p>
+        <p>Due Date: ${p.dueDate}</p>
+        <p style="color:${isOverdue(p.dueDate) ? 'red' : 'green'};">
+          ${isOverdue(p.dueDate) ? 'Overdue' : 'On Time'}
+        </p>
+        <p>Status: <strong>${p.status}</strong></p>
+
+        <button class="cart-btn" onclick="viewBorrow(${index})">View</button>
+        <button class="cart-btn" onclick="editBorrow(${index})">Edit</button>
+        <button class="cart-btn" onclick="approveBorrow(${index})">Approve</button>
+        <button class="cart-btn" onclick="returnBorrow(${index})">Return</button>
+        <button class="cart-btn" onclick="deleteBorrow(${index})">Delete</button>
+      </div>
+    `;
+  });
+}
+
+function viewBorrow(index) {
+  const p = borrowItems[index];
+  const popup = document.getElementById("popup");
+  const details = document.getElementById("popupDetails");
+
+  let imgHTML = "";
+  p.images.forEach(img => {
+    imgHTML += `<img src="${img}" style="width:120px; margin:5px; border-radius:10px;">`;
+  });
+
+  let reviewsHTML = "";
+  p.reviews.forEach(r => {
+    reviewsHTML += `
+      <div style="border:1px solid #ccc; padding:8px; margin:5px; border-radius:8px;">
+        <p>⭐ ${r.rating} / 5</p>
+        <p>${r.text}</p>
+      </div>
+    `;
+  });
+
+  let chatHTML = "";
+  p.chat.forEach(msg => {
+    chatHTML += `<p><strong>${msg.sender}:</strong> ${msg.text}</p>`;
+  });
+
+  details.innerHTML = `
+    <h3>${p.name}</h3>
+    <div>${imgHTML}</div>
+    <p><strong>Borrow Days:</strong> ${p.days}</p>
+    <p><strong>Due Date:</strong> ${p.dueDate}</p>
+    <p><strong>Status:</strong> ${isOverdue(p.dueDate) ? 'Overdue' : p.status}</p>
+    <p><strong>Location:</strong> ${p.location}</p>
+    <p><strong>Condition:</strong> ${p.condition}</p>
+    <p><strong>Description:</strong> ${p.description}</p>
+    <p><strong>Tags:</strong> ${p.tags.join(", ")}</p>
+
+    <h3>Reviews</h3>
+    ${reviewsHTML || "<p>No reviews yet.</p>"}
+
+    <select id="reviewRating">
+      <option value="1">⭐ 1</option>
+      <option value="2">⭐ 2</option>
+      <option value="3">⭐ 3</option>
+      <option value="4">⭐ 4</option>
+      <option value="5">⭐ 5</option>
+    </select>
+    <textarea id="reviewText" placeholder="Write review..."></textarea>
+    <button class="cart-btn" onclick="addReview(${index})">Submit Review</button>
+
+    <h3>QR Code Pickup</h3>
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Borrow-${index}" />
+    </div>
+
+    <h3>Chat</h3>
+    <div class="chat-box">${chatHTML || "<p>No messages yet.</p>"}</div>
+    <input id="chatInput" class="chat-input" placeholder="Type message...">
+    <button class="cart-btn" onclick="sendChat(${index})">Send</button>
+  `;
+
+  popup.style.display = "block";
+}
+
+function addReview(index) {
+  const rating = parseInt(document.getElementById("reviewRating").value);
+  const text = document.getElementById("reviewText").value;
+
+  if (!text.trim()) {
+    alert("Write review.");
+    return;
+  }
+
+  borrowItems[index].reviews.push({ rating, text });
+  localStorage.setItem("borrowItems", JSON.stringify(borrowItems));
+
+  viewBorrow(index);
+}
+
+function sendChat(index) {
+  const text = document.getElementById("chatInput").value;
+  if (!text.trim()) return;
+
+  borrowItems[index].chat.push({
+    sender: "User",
+    text
+  });
+
+  localStorage.setItem("borrowItems", JSON.stringify(borrowItems));
+  viewBorrow(index);
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+
+function editBorrow(index) {
+  const p = borrowItems[index];
+  document.getElementById("name").value = p.name;
+  document.getElementById("days").value = p.days;
+  document.getElementById("dueDate").value = p.dueDate;
+  document.getElementById("location").value = p.location;
+  document.getElementById("condition").value = p.condition;
+  document.getElementById("description").value = p.description;
+  document.getElementById("image1").value = p.images[0] || "";
+  document.getElementById("image2").value = p.images[1] || "";
+  document.getElementById("image3").value = p.images[2] || "";
+  document.getElementById("tags").value = p.tags.join(",");
+  document.getElementById("editId").value = index;
+}
+
+function approveBorrow(index) {
+  borrowItems[index].status = "Approved";
+  localStorage.setItem("borrowItems", JSON.stringify(borrowItems));
+  loadBorrowItems();
+}
+
+function returnBorrow(index) {
+  borrowItems[index].status = "Returned";
+  borrowItems[index].history.push({
+    returnedOn: new Date().toISOString().split("T")[0]
+  });
+  localStorage.setItem("borrowItems", JSON.stringify(borrowItems));
+  loadBorrowItems();
+}
+
+function deleteBorrow(index) {
+  if (!confirm("Delete this item?")) return;
+  borrowItems.splice(index, 1);
+  localStorage.setItem("borrowItems", JSON.stringify
